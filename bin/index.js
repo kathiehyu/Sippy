@@ -13,13 +13,29 @@ const options = yargs
 })
  .option("u", {
     alias: "userInfo",
-    describe: "Display user info including name, follower/following count, and Spotify ID",
+    describe: "Display current user info",
+    type: "boolean",
+    demandOption: false
+ })
+ .option("l", {
+    alias: "login",
+    describe: "Redirects to Spotify login page in browser",
     type: "boolean",
     demandOption: false
  })
  .help(true) 
  .argv;
 
+if (yargs.argv.u) {
+    console.log("Handling argument u");
+    utils.userInfo();
+    return;
+}
+if (yargs.argv.l) {
+    console.log("Logging in ....");
+    utils.getToken();
+    return;
+}
 if (yargs.argv._.length == 0) {
     yargs.showHelp();
 }
