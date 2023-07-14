@@ -12,7 +12,7 @@ async function getToken() {
         url: 'https://accounts.spotify.com/api/token',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
-            'Authorization': 'Basic ' + Buffer.from('fd395b28c49548cd9084dfbec1771276:a9a8d02154654773a9907039694797be', 'utf-8').toString('base64')
+            'Authorization': 'Basic ' + Buffer.from(config.CLIENT_ID + ":" + config.CLIENT_SECRET, 'utf-8').toString('base64')
         },
         params: {
             grant_type: 'client_credentials'
@@ -36,7 +36,6 @@ async function getToken() {
                     console.log("caught error while writing");
                     console.log(error);
                 }
-                console.log("token retrieved in config: " + config.ACCESS_TOKEN);
             });
             console.log("finished writing?");
         });
