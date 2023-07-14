@@ -1,0 +1,19 @@
+{
+  "name": "sippy",
+  "version": "1.0.0",
+  "description": "spotify CLI",
+  "main": "bin/index.js",
+  "bin": {
+    "spp": "./bin/index.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.4.0",
+    "fs": "^0.0.1-security",
+    "yargs": "^17.7.2"
+  }
+}
