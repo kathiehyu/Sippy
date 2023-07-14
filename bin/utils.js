@@ -1,11 +1,12 @@
-let access_token = null;
 const axios = require("axios");
 const fs = require("fs");
 const writeStream = fs.createWriteStream("Output.txt");
+const config = require("../config.js");
+console.log(config.ACCESS_TOKEN);
+// const dotenv = require("dotenv").config({debug: true, override: true});
 
 async function getToken() {
-    console.log("RETRIEVING AUTHORIZATION TOKEN");
-    // axios.post('https://accounts.spotify.com/api/token', )
+    writeStream.write("RETRIEVING AUTHORIZATION TOKEN\n");
     axios({
         method: 'POST',
         url: 'https://accounts.spotify.com/api/token',
@@ -17,20 +18,35 @@ async function getToken() {
             grant_type: 'client_credentials'
         }
     })
-    // axios.post('https://accounts.spotify.com/api/token', {
-    //     headers: {
-    //         'Content-Type': 'application/x-www-form-urlencoded'
-    //     },
-    //     body: "grant_type=client_credentials&client_id=fd395b28c49548cd9084dfbec1771276&client_secret=a9a8d02154654773a9907039694797be"
-    // })
     .then(response => {
         writeStream.write("response status: " + response.status + "\n");
         writeStream.write("response data: " + response.data);
         writeStream.write(JSON.stringify(response.data));
-        access_token = response.data.access_token;
-        console.log("token retrieved: " + access_token);
+        let access_token = response.data.access_token;
+        console.log("got response access token: " + access_token);
+        fs.readFile("./config.js", (err, data) => {
+            if (err) {
+                console.log("caught error while reading");
+                console.log(err);
+            }
+            let exp = new RegExp('^.*ACCESS_TOKEN.*$', 'm');
+            let newString = data.toString().replace(exp, 'ACCESS_TOKEN = "' + access_token + '";');
+            fs.writeFile("./config.js", newString, 'utf-8', (error) => {
+                if (error) {
+                    console.log("caught error while writing");
+                    console.log(error);
+                }
+                console.log("token retrieved in config: " + config.ACCESS_TOKEN);
+            });
+            console.log("finished writing?");
+        });
+        // dotenv.populate(process.env, {ACCESS_TOKEN: access_token}, {override: true, debug: true});
+        // process.env.ACCESS_TOKEN = access_token;
+        // process.env.ACCESS_TOKEN = response.data.access_token;
+        // console.log("token retrieved: " + process.env.ACCESS_TOKEN);
     })
     .catch(err => {
+        console.log(err);
         if (err.response) {
             console.log("caught error???");
             writeStream.write(JSON.stringify(err.response.status));
@@ -40,25 +56,39 @@ async function getToken() {
 }
 
 async function userInfo() {
-    console.log("RETRIEVING USER INFO");
-    axios.get('https://api.spotify.com/v1/me', {
+    writeStream.write("RETRIEVING USER INFO\n");
+    console.log("current access token:" + config.ACCESS_TOKEN);
+    axios({
+        method: 'GET',
+        url: 'https://api.spotify.com/v1/me',
         headers: {
-            'Authorization': 'Bearer ' + access_token
+            'Authorization': 'Bearer ' + config.ACCESS_TOKEN
         }
     })
     .then(response => {
-        if (response.status.data.error.message == 'Invalid access token') {
-            console.log("Could not find current user. Please sign in using 'spp -l' or 'spp --login'");
-        } else {
-            writeStream.writeFile("response status: " + response.status);
-            // console.log(JSON.stringify(response));
-            // console.log("Display Name:" + response.display_name);
-        }
+        writeStream.write("response status: " + response.status + "\n");
+        // writeStream.write("response data: " + response.data);
+        writeStream.write(JSON.stringify(response.data));
+        let display_name = response.data.display_name;
+        let followersNum = response.data.followers.total;
+        console.log("user data retrieved:");
+        console.log("display name: " + display_name);
+        console.log("number of followers: " + followersNum);
     })
+    .catch(err => {
+        // how to check for invalid token?
+        if (err.response) {
+            console.log("caught error while accessing user data");
+            writeStream.write(JSON.stringify(err.response.status));
+            writeStream.write(JSON.stringify(err.response.data));
+            if (err.response.status == 401) {
+                console.log("Could not authenticate user. Please log in using `spp -l`");
+            }
+        }
+    });
 }
 
 module.exports = {
     getToken,
-    userInfo,
-    access_token
+    userInfo
 }
