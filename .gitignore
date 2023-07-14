@@ -3,3 +3,4 @@ notes.txt
 .DS_Store
 node_modules/
 Output.txt
+config.js
